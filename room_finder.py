@@ -9,6 +9,83 @@ import pandas as pd
 from PIL import Image
 import streamlit as st
 
+def render_transport_banner():
+    st.markdown("""
+    <style>
+    @keyframes bigBannerPulse {
+        0%,100% { box-shadow: 0 0 0 6px rgba(250,204,21,0.35), 0 14px 40px rgba(0,0,0,0.7); transform: scale(1); }
+        50% { box-shadow: 0 0 0 12px rgba(250,204,21,0.15), 0 20px 60px rgba(0,0,0,0.8); transform: scale(1.01); }
+    }
+    .BIG-BANNER-WRAP {
+        border: 5px solid #FACC15 !important;
+        border-left: 16px solid #00FF88 !important;
+        border-radius: 24px !important;
+        background: #0F172A !important;
+        padding: 6px !important;
+        margin: 20px 0 30px 0 !important;
+        animation: bigBannerPulse 2s infinite !important;
+        display: block !important;
+        width: 100% !important;
+    }
+    .BIG-BANNER-INNER {
+        background: linear-gradient(135deg, #020617 0%, #0F172A 55%, #1E293B 100%) !important;
+        border-radius: 18px !important;
+        padding: 24px 28px !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 20px !important;
+        border: 2px solid rgba(255,255,255,0.2) !important;
+    }
+    /* BORDER ALL ADMIN BUTTONS */
+    div[data-testid="stButton"] > button {
+        border: 3px solid #FACC15 !important;
+        border-radius: 12px !important;
+        font-weight: 900 !important;
+        box-shadow: 0 3px 12px rgba(250,204,21,0.35) !important;
+    }
+    div[data-testid="stButton"] > button:hover {
+        border-color: #00FF88 !important;
+        box-shadow: 0 6px 20px rgba(0,255,136,0.5) !important;
+        transform: translateY(-1px) !important;
+    }
+    div[data-testid="stNumberInput"] > div {
+        border: 3px solid #38BDF8 !important;
+        border-radius: 12px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    st.markdown("""
+    <div class="BIG-BANNER-WRAP">
+        <div class="BIG-BANNER-INNER">
+            <div style="flex:1; min-width:300px;">
+                <div style="background:#FACC15; color:#000; font-weight:900; font-size:15px; display:inline-block; padding:7px 16px; border-radius:24px; margin-bottom:14px;">🚚 MOVING? WE GOT YOU COVERED!</div>
+                <div style="color:#FFFFFF !important; font-weight:900; font-size:22px; line-height:1.25; margin-bottom:10px; -webkit-text-fill-color:#FFFFFF !important;">Need to move furniture to your<br>new room? Trucks Available NOW!</div>
+                <div style="color:#4ADE80 !important; font-weight:800; font-size:14px; -webkit-text-fill-color:#4ADE80 !important;">✅ Verified Drivers • Mutare & Surrounds • 📱 WhatsApp • 💰 Low Cost • ⚡ Same Day</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #FEF9C3 0%, #FACC15 100%) !important; color:#000 !important; padding:20px 32px !important; border-radius:18px !important; border:4px solid #FFFFFF !important; font-weight:900; font-size:18px; text-align:center; box-shadow:0 10px 36px rgba(250,204,21,0.65) !important; -webkit-text-fill-color:#000 !important; min-width:200px;">
+                👉 GO TO<br>CAR HIRE TAB<br>
+                <span style="font-size:13px; background:#0F172A; color:#FEF9C3 !important; padding:8px 16px; border-radius:24px; display:inline-block; margin-top:10px; border:2px solid #FACC15; -webkit-text-fill-color:#FEF9C3 !important;">🚀 Transport</span>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def safe_link_button(label, url, use_container_width=False, **kwargs):
+    width_style = "width:100%;" if use_container_width else ""
+    extra = ""
+    if kwargs.get("type") == "primary":
+        extra = "background:#1E40AF;color:white;padding:10px 18px;border-radius:10px;display:inline-block;text-decoration:none;font-weight:800;"
+    st.markdown(f'<a href="{url}" target="_blank" style="{width_style} {extra} text-decoration:none;">{label}</a>', unsafe_allow_html=True)
+# Override
+try:
+    st.link_button = safe_link_button
+except:
+    pass
+
+
 try:
     from streamlit.runtime.scriptrunner import get_script_run_ctx
     def get_device_id():
@@ -2089,6 +2166,14 @@ if st.session_state.get("logged_in", False) and not st.session_state.get("_login
             st.session_state["_fireworks_login_shown"] = True
 
 # ===== NEW: ACCOUNT CREATED / LOGIN SUCCESS POPUP WITH FIREWORKS - ONLY ONCE PER LOGIN =====
+
+# AUTO BANNER IN EVERY TAB - force visible
+if st.session_state.get("logged_in"):
+    try:
+        render_transport_banner()
+    except:
+        pass
+
 if st.session_state.get("show_account_created_popup", False) and not st.session_state.get("_login_fireworks_done", False):
     created_name = st.session_state.get("account_created_name", st.session_state.user_name)
     created_type = st.session_state.get("account_created_type", "new")
@@ -3847,150 +3932,172 @@ elif selected_tab.startswith("Admin Panel"):
         if st.button("🔍 Show All Logged In Users & Power Controls", use_container_width=True, type="primary"):
             st.session_state.show_admin_users_power = True
         
+        
+        
         if st.session_state.get("show_admin_users_power", False):
-            users_list = st.session_state.db.get("users", [])
-            if not users_list:
-                st.info("No users found")
+            # === SEARCH BAR ON TOP ===
+            st.markdown("### 🔍 Search Users")
+            col_s1, col_s2, col_s3 = st.columns([3,1,1])
+            with col_s1:
+                search_input = st.text_input("Search by name, phone, or role", placeholder="Type name like Lewis or phone...", key="admin_user_search_input", label_visibility="collapsed")
+            with col_s2:
+                do_search = st.button("🔍 Search", key="admin_search_btn", use_container_width=True)
+                if do_search:
+                    st.session_state.admin_user_search_query = search_input
+            with col_s3:
+                if st.button("❌ Clear", key="admin_clear_search", use_container_width=True):
+                    st.session_state.admin_user_search_query = ""
+                    st.session_state.admin_user_search_input = ""
+                    st.rerun()
+            
+            users_list_all = st.session_state.db.get("users", [])
+            sq_raw = st.session_state.get("admin_user_search_query", "") or search_input or ""
+            if sq_raw:
+                sq = sq_raw.lower().strip()
+                users_list = [u for u in users_list_all if sq in u.get("name","").lower() or sq in u.get("phone","").lower() or sq in u.get("role","").lower()]
+                st.success(f"🔍 Found {len(users_list)} users matching '{sq_raw}' out of {len(users_list_all)}")
             else:
-                st.write(f"Total Users: {len(users_list)}")
+                users_list = users_list_all
+                
+            st.markdown(f"**Total Users: {len(users_list)}**")
+            st.divider()
+            
+            if not users_list:
+                st.warning("No users found - try clear search")
+            else:
                 for u_idx, user in enumerate(users_list):
                     with st.container(border=True):
                         u_phone = user.get("phone", "N/A")
                         u_name = user.get("name", "Unknown")
                         u_role = user.get("role", "Tenant")
                         free_posts = user.get("monthly_free_posts", 0)
-                        agent_pkg = user.get("agent_package", "None")
-                        agent_until = user.get("agent_package_until")
-                        agent_limit = user.get("agent_active_limit", 0)
-                        # Calculate remaining free slots: 5 free base + admin given - used
-                        base_free = 5
                         admin_extra = user.get("admin_extra_slots", 0)
-                        admin_extra_package = user.get("admin_extra_package_slots", 0)
-                        total_free = base_free + admin_extra
+                        house_sale_extra = user.get("admin_extra_house_sale_slots", 0)
+                        total_free = 5 + admin_extra
                         remaining = max(0, total_free - free_posts)
-                        # Check rooms posted
-                        user_rooms_count = len([r for r in st.session_state.db.get("rooms", []) if r.get("posted_by_phone") == u_phone])
-                        active_rooms_count = len([r for r in st.session_state.db.get("rooms", []) if r.get("posted_by_phone") == u_phone and r.get("status") not in ["Rented","Taken"]])
+                        pkg = user.get("agent_package", "Free")
+                        pkg_until = user.get("agent_package_until", "")
+                        pkg_limit = user.get("agent_active_limit", 5)
+                        vip_until = user.get("vip_until", "")
+                        is_banned = u_phone in st.session_state.db.get("banned_phones", [])
                         
-                        # Package countdown
-                        pkg_countdown = ""
-                        pkg_remaining = 0
-                        if agent_until:
+                        expiry_str = "N/A"
+                        if pkg_until:
                             try:
-                                pkg_dt = datetime.fromisoformat(agent_until)
-                                diff = pkg_dt - datetime.now()
-                                if diff.total_seconds() > 0:
-                                    pkg_countdown = f"{diff.days}d {diff.seconds//3600}h left"
-                                    pkg_remaining = max(0, (agent_limit + admin_extra_package) - active_rooms_count)
-                                else:
-                                    pkg_countdown = "Expired"
+                                from datetime import datetime as _dt
+                                exp_dt = _dt.fromisoformat(pkg_until) if "T" in str(pkg_until) else _dt.strptime(str(pkg_until), "%Y-%m-%d")
+                                expiry_str = exp_dt.strftime("%d %b %Y %H:%M")
+                                if _dt.now() > exp_dt:
+                                    expiry_str += " ⏰ EXPIRED"
                             except:
-                                pkg_countdown = "Unknown"
+                                expiry_str = str(pkg_until)[:19]
                         
-                        # Free slots countdown till deplete (29 days reset)
-                        free_countdown = ""
-                        depleted_at = user.get("free_slots_depleted_at")
-                        last_reset = user.get("last_post_reset")
-                        if depleted_at and remaining == 0:
-                            try:
-                                dep_dt = datetime.fromisoformat(depleted_at)
-                                reset_dt = dep_dt + timedelta(days=29)
-                                diff = reset_dt - datetime.now()
-                                if diff.total_seconds() > 0:
-                                    free_countdown = f"Resets in {diff.days}d {diff.seconds//3600}h ({reset_dt.strftime('%d %b')})"
-                                else:
-                                    free_countdown = "Ready to reset"
-                            except:
-                                free_countdown = "Calculating..."
-                        elif last_reset:
-                            try:
-                                reset_dt = datetime.fromisoformat(last_reset) + timedelta(days=30)
-                                diff = reset_dt - datetime.now()
-                                free_countdown = f"Free cycle: {diff.days}d left till reset"
-                            except:
-                                pass
+                        st.markdown(f"**{u_name}** | {u_phone} | {u_role} | Rooms: {len([r for r in st.session_state.db.get('rooms',[]) if r.get('posted_by_phone')==u_phone])} | Free {free_posts}/{total_free} Rem:{remaining} | HouseSaleExtra:{house_sale_extra}")
+                        if pkg != "Free" or pkg_until or vip_until:
+                            st.warning(f"📦 Package: {pkg} | Limit: {pkg_limit} | Expires: {expiry_str} | {'🚫 BANNED' if is_banned else '✅ Active'}")
+                            if vip_until:
+                                st.caption(f"💎 VIP until: {vip_until}")
+                        else:
+                            st.caption(f"📦 Package: Free | Limit: {pkg_limit} | {'🚫 BANNED' if is_banned else '✅ Active'}")
                         
-                        st.markdown(f"**{u_name}** | 📞 {u_phone} | {u_role} | Rooms: {user_rooms_count} (Active {active_rooms_count}) | Free Used: {free_posts}/{total_free} | Remaining: {remaining}")
-                        st.caption(f"Agent: {agent_pkg} | Limit: {agent_limit} + {admin_extra_package} extra = {agent_limit + admin_extra_package} | Active Used: {active_rooms_count} | Package Remaining: {pkg_remaining} | ⏰ {pkg_countdown} | Extra Free: {admin_extra} | Free Countdown: {free_countdown}")
-                        # Show detailed slots breakdown
-                        if agent_pkg and agent_pkg != "None":
-                            st.caption(f"📦 PACKAGE: Base {agent_limit} + Extra {admin_extra_package} = Total {agent_limit + admin_extra_package} | Used {active_rooms_count} | Remaining {pkg_remaining} | ⏰ {pkg_countdown}")
-                        # REMOVED YELLOW BANNER - per user request, no yellow background on every user
-                        # Show subtle info only if has extra
-                        if admin_extra > 0 or remaining != total_free:
-                            st.caption(f"🆓 FREE: Base 5 + Extra {admin_extra} = {total_free} | Used {free_posts} | Remaining {remaining} | {free_countdown}")
-                        
-                        c1, c2, c3, c4 = st.columns([2,2,2,2])
-                        with c1:
-                            extra_slots = st.number_input(f"Add Free Slots for {u_name}", min_value=0, max_value=1000, value=0, key=f"extra_slots_{u_idx}")
-                            if st.button(f"➕ Give Free Slots", key=f"give_slots_{u_idx}", use_container_width=True):
-                                if extra_slots > 0:
-                                    user["admin_extra_slots"] = user.get("admin_extra_slots", 0) + extra_slots
-                                    # If user depleted, clear depleted flag so can post instantly
-                                    if user.get("free_slots_depleted_at") and (5 + user["admin_extra_slots"] - free_posts) > 0:
-                                        user["free_slots_depleted_at"] = None
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.markdown("#### 🏘️ House for Sale Slots")
+                            st.caption(f"Current extra: {house_sale_extra}")
+                            hs_num = st.number_input("House Sale Number", min_value=0, max_value=1000, value=0, key=f"house_sale_slots_input_{u_idx}", label_visibility="collapsed")
+                            c1a, c1b = st.columns(2)
+                            with c1a:
+                                if st.button("🏘️ Give Free Slots", key=f"add_house_sale_{u_idx}", use_container_width=True):
+                                    if hs_num>0:
+                                        user["admin_extra_house_sale_slots"]=user.get("admin_extra_house_sale_slots",0)+hs_num
+                                        save_persistent_db(st.session_state.db)
+                                        st.toast(f"✅ Gave {hs_num} House Sale slots to {u_name}!", icon="✅")
+                                        st.success(f"✅ DONE: Gave {hs_num} House Sale slots to {u_name}! New total: {user['admin_extra_house_sale_slots']} slots. User can post NOW!")
+                                        st.balloons()
+                                    else:
+                                        st.error("❌ Enter number >0!")
+                            with c1b:
+                                if st.button("🔄 Reset House Slots", key=f"reset_house_sale_{u_idx}", use_container_width=True):
+                                    user["admin_extra_house_sale_slots"]=0
                                     save_persistent_db(st.session_state.db)
-                                    new_total = 5 + user["admin_extra_slots"]
-                                    new_remaining = new_total - free_posts
-                                    st.success(f"✅ Gave {extra_slots} extra FREE slots to {u_name}! Now total free: {new_total} | Remaining {new_remaining} - Can post instantly! ⏰ Countdown: resets in 29 days")
+                                    st.toast(f"Reset House Sale for {u_name}", icon="🔄")
+                                    st.success(f"✅ DONE: Reset House Sale slots for {u_name} to 0!")
                                     st.rerun()
-                            extra_pkg = st.number_input(f"Add Package Slots for {u_name}", min_value=0, max_value=1000, value=0, key=f"extra_pkg_{u_idx}")
-                            if st.button(f"➕ Give Package Slots", key=f"give_pkg_{u_idx}", use_container_width=True):
-                                if extra_pkg > 0:
-                                    user["admin_extra_package_slots"] = user.get("admin_extra_package_slots", 0) + extra_pkg
+                        with col2:
+                            st.markdown("#### 🏠 House to Rent (Free) Slots")
+                            st.caption(f"Extra: {admin_extra} Total:{total_free} Remaining:{remaining}")
+                            fr_num = st.number_input("Free Slots Number", min_value=0, max_value=1000, value=0, key=f"extra_slots_{u_idx}", label_visibility="collapsed")
+                            c2a, c2b = st.columns(2)
+                            with c2a:
+                                if st.button("🏠 Give Free Slots", key=f"give_slots_{u_idx}", use_container_width=True):
+                                    if fr_num>0:
+                                        user["admin_extra_slots"]=user.get("admin_extra_slots",0)+fr_num
+                                        if user.get("free_slots_depleted_at") and (5+user["admin_extra_slots"]-free_posts)>0:
+                                            user["free_slots_depleted_at"]=None
+                                        save_persistent_db(st.session_state.db)
+                                        st.toast(f"✅ Gave {fr_num} Free slots to {u_name}!", icon="✅")
+                                        st.success(f"✅ DONE: Gave {fr_num} Free Rent slots to {u_name}! New total: {5+user['admin_extra_slots']} - User can post NOW!")
+                                        st.balloons()
+                                    else:
+                                        st.error("❌ Enter number >0!")
+                            with c2b:
+                                if st.button("🔄 Reset Free Slots", key=f"reset_free_{u_idx}", use_container_width=True):
+                                    user["admin_extra_slots"]=0
+                                    user["monthly_free_posts"]=0
+                                    user["free_slots_depleted_at"]=None
                                     save_persistent_db(st.session_state.db)
-                                    st.success(f"✅ Gave {extra_pkg} extra PACKAGE slots to {u_name}! Package limit now {user.get('agent_active_limit',0) + user['admin_extra_package_slots']} - Can post instantly!")
+                                    st.toast(f"Reset Free for {u_name}", icon="🔄")
+                                    st.success(f"✅ DONE: Reset Free slots for {u_name} to 5!")
                                     st.rerun()
-                        with c2:
-                            if st.button(f"🎁 Give 20 Free Slots", key=f"give20_{u_idx}", use_container_width=True):
-                                user["admin_extra_slots"] = user.get("admin_extra_slots", 0) + 20
-                                if user.get("free_slots_depleted_at"):
-                                    user["free_slots_depleted_at"] = None
-                                save_persistent_db(st.session_state.db)
-                                st.success(f"✅ Gave 20 FREE slots to {u_name}! Now can post instantly!")
-                                st.rerun()
-                            if st.button(f"📦 Give 20 Package Slots", key=f"give20pkg_{u_idx}", use_container_width=True):
-                                user["admin_extra_package_slots"] = user.get("admin_extra_package_slots", 0) + 20
-                                save_persistent_db(st.session_state.db)
-                                st.success(f"✅ Gave 20 PACKAGE slots to {u_name}! User with package can post 20 more!")
-                                st.rerun()
-                            if st.button(f"♾️ Unlimited", key=f"unlimited_{u_idx}", use_container_width=True):
-                                user["agent_package"] = "Agency ($25/mo) Unlimited - ADMIN GIVEN"
-                                user["agent_active_limit"] = 999999
-                                user["agent_package_until"] = (datetime.now() + timedelta(days=365)).isoformat()
-                                save_persistent_db(st.session_state.db)
-                                st.success(f"✅ {u_name} now UNLIMITED!")
-                                st.rerun()
-                        with c3:
-                            if st.button(f"🔄 Reset Free Count", key=f"reset_free_{u_idx}", use_container_width=True):
-                                user["monthly_free_posts"] = 0
-                                user["free_slots_depleted_at"] = None
-                                save_persistent_db(st.session_state.db)
-                                st.success(f"✅ Reset {u_name} free count to 0!")
-                                st.rerun()
-                            if st.button(f"💎 Make VIP", key=f"vip_{u_idx}", use_container_width=True):
-                                user["is_vip"] = True
-                                user["vip_until"] = (datetime.now() + timedelta(days=30)).isoformat()
-                                save_persistent_db(st.session_state.db)
-                                st.success(f"✅ {u_name} is VIP 30 days!")
-                                st.rerun()
-                        with c4:
-                            if st.button(f"🚫 Ban User", key=f"ban_{u_idx}", type="primary", use_container_width=True):
-                                st.session_state.db["banned_phones"].append(u_phone)
-                                save_persistent_db(st.session_state.db)
-                                st.warning(f"🚫 Banned {u_name}")
-                                st.rerun()
-                            if st.button(f"🗑️ Clear Rooms", key=f"clear_rooms_{u_idx}", use_container_width=True):
-                                st.session_state.db["rooms"] = [r for r in st.session_state.db.get("rooms", []) if r.get("posted_by_phone") != u_phone]
-                                save_persistent_db(st.session_state.db)
-                                st.success(f"🗑️ Cleared rooms for {u_name}")
-                                st.rerun()
-                        
                         st.divider()
-            
+                        cb, cr = st.columns(2)
+                        with cb:
+                            if is_banned:
+                                if st.button(f"✅ Unban {u_name}", key=f"unban_{u_idx}", use_container_width=True):
+                                    if u_phone in st.session_state.db.get("banned_phones", []):
+                                        st.session_state.db["banned_phones"].remove(u_phone)
+                                        save_persistent_db(st.session_state.db)
+                                        st.toast(f"Unbanned {u_name}!", icon="✅")
+                                        st.success(f"✅ DONE: Unbanned {u_name} - User can login again!")
+                                        st.rerun()
+                            else:
+                                if st.button(f"🚫 Ban User", key=f"ban_{u_idx}", type="primary", use_container_width=True):
+                                    if u_phone not in st.session_state.db.get("banned_phones", []):
+                                        st.session_state.db["banned_phones"].append(u_phone)
+                                        # Force logout if that user is currently logged in session
+                                        if st.session_state.get("user_phone") == u_phone:
+                                            st.session_state.logged_in = False
+                                        # Clear any active sessions for that phone (device_slots)
+                                        if "device_slots" in st.session_state.db:
+                                            st.session_state.db["device_slots"] = [d for d in st.session_state.db["device_slots"] if d.get("phone") != u_phone]
+                                        save_persistent_db(st.session_state.db)
+                                        st.toast(f"🚫 Banned {u_name} - logged out!", icon="🚫")
+                                        st.error(f"🚫 DONE: Banned {u_name} ({u_phone}) - User is LOGGED OUT immediately and blocked from system!")
+                                        st.rerun()
+                        with cr:
+                            if st.button(f"♻️ Reset to Normal", key=f"reset_normal_{u_idx}", use_container_width=True):
+                                user["agent_package"]="Free"
+                                user["agent_active_limit"]=5
+                                user["agent_package_until"]=None
+                                user["admin_extra_package_slots"]=0
+                                user["is_vip"]=False
+                                user["vip_until"]=None
+                                user["monthly_free_posts"]=0
+                                user["admin_extra_slots"]=0
+                                user["admin_extra_house_sale_slots"]=0
+                                user["free_slots_depleted_at"]=None
+                                if u_phone in st.session_state.db.get("banned_phones", []):
+                                    st.session_state.db["banned_phones"].remove(u_phone)
+                                save_persistent_db(st.session_state.db)
+                                st.toast(f"Reset {u_name} to Normal!", icon="♻️")
+                                st.success(f"♻️ DONE: {u_name} reset to NORMAL Free! All packages, VIP, extra slots removed. Limit 5!")
+                                st.rerun()
+                        st.divider()
             if st.button("❌ Hide User Power Panel", key="hide_admin_power"):
-                st.session_state.show_admin_users_power = False
+                st.session_state.show_admin_users_power=False
                 st.rerun()
+
+
 
     with adm_t4:
         st.subheader("🏠 Manage All Listings - Admin Full Power")
